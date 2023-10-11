@@ -15,12 +15,14 @@ import { styles } from "../theme";
 import TrendingMovies from "../components/TrendingMovies";
 import MovieList from "../components/MovieList";
 import { useNavigation } from "@react-navigation/native";
+import Loading from "../components/Loading";
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [trending, setTrending] = useState([1, 2, 3]);
   const [upcoming, setUpcoming] = useState([1, 2, 3, 4, 5, 6]);
   const [topRated, setTopRated] = useState([1, 2, 3, 4, 5, 6]);
+  const [isLoading, setLoading] = useState(false);
 
   const handleClick = () => {
     console.log("Clicked");
@@ -41,19 +43,23 @@ const HomeScreen = () => {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 10 }}
-      >
-        {/* Trending Movie */}
-        <TrendingMovies data={trending} handleClick={handleClick} />
+      {isLoading ? (
+        <Loading />
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 10 }}
+        >
+          {/* Trending Movie */}
+          <TrendingMovies data={trending} handleClick={handleClick} />
 
-        {/* Upcoming Movies */}
-        <MovieList title="Upcoming Movies" data={upcoming} />
+          {/* Upcoming Movies */}
+          <MovieList title="Upcoming Movies" data={upcoming} />
 
-        {/* Top rated Movies */}
-        <MovieList title="Top Rated Movies" data={topRated} />
-      </ScrollView>
+          {/* Top rated Movies */}
+          <MovieList title="Top Rated Movies" data={topRated} />
+        </ScrollView>
+      )}
     </View>
   );
 };

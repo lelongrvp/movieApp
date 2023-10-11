@@ -28,6 +28,7 @@ const MovieScreen = () => {
   const [isFavorite, setFavorite] = useState(false);
   const [cast, setCast] = useState([1, 2, 3, 4, 5]);
   const [similarMovies, setSimilarMovies] = useState([1, 2, 3, 4, 5]);
+  const [isLoading, setLoading] = useState(true);
 
   useEffect(() => {
     // Call api to get movie details
