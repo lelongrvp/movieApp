@@ -1,32 +1,56 @@
 import {
   View,
   Text,
-  Dimensions,
-  SafeAreaView,
   TextInput,
   TouchableOpacity,
+  Image,
   ScrollView,
   TouchableWithoutFeedback,
-  Image,
+  Dimensions,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { XMarkIcon } from "react-native-heroicons/outline";
 import { useNavigation } from "@react-navigation/native";
+import { fallbackMoviePoster, image185, searchMovies } from "../api/movieData";
+import { debounce } from "lodash";
 import Loading from "../components/Loading";
 
-var { width, height } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
-const SearchScreen = () => {
-  let movieName = "Antman and the Wasp: Quantumania";
+export default function SearchScreen() {
   const navigation = useNavigation();
-  const [results, setResults] = useState([1]);
-  const [isLoading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState([]);
+
+  const handleSearch = (search) => {
+    if (search && search.length > 2) {
+      setLoading(true);
+      searchMovies({
+        query: search,
+        include_adult: false,
+        language: "en-US",
+        page: "1",
+      }).then((data) => {
+        console.log("got search results");
+        setLoading(false);
+        if (data && data.results) setResults(data.results);
+      });
+    } else {
+      setLoading(false);
+      setResults([]);
+    }
+  };
+
+  const handleTextDebounce = useCallback(debounce(handleSearch, 400), []);
 
   return (
     <SafeAreaView className="bg-neutral-800 flex-1">
-      <View className="mx-4 mt-20 mb-3 flex-row justify-between items-center border border-neutral-500 rounded-full">
+      {/* search input */}
+      <View className="mx-4 my-5 flex-row justify-between items-center border border-neutral-500 rounded-full">
         <TextInput
-          placeholder="Search Movie..."
+          onChangeText={handleTextDebounce}
+          placeholder="Search Movie"
           placeholderTextColor={"gray"}
           className="pb-1 pl-6 flex-1 text-base font-semibold text-white tracking-wider"
         />
@@ -37,8 +61,9 @@ const SearchScreen = () => {
           <XMarkIcon size="25" color="white" />
         </TouchableOpacity>
       </View>
-      {/* results */}
-      {isLoading ? (
+
+      {/* search results */}
+      {loading ? (
         <Loading />
       ) : results.length > 0 ? (
         <ScrollView
@@ -47,25 +72,28 @@ const SearchScreen = () => {
           className="space-y-3"
         >
           <Text className="text-white font-semibold ml-1">
-            Results ({results.length}):
+            Results ({results.length})
           </Text>
           <View className="flex-row justify-between flex-wrap">
-            {results.map((result, index) => {
+            {results.map((item, index) => {
               return (
                 <TouchableWithoutFeedback
                   key={index}
-                  onPress={() => navigation.push("Movie", result)}
+                  onPress={() => navigation.push("Movie", item)}
                 >
                   <View className="space-y-2 mb-4">
                     <Image
+                      source={{
+                        uri: image185(item.poster_path) || fallbackMoviePoster,
+                      }}
+                      // source={require('../assets/images/moviePoster2.png')}
                       className="rounded-3xl"
-                      source={require("../../assets/images/dummy.png")}
                       style={{ width: width * 0.44, height: height * 0.3 }}
                     />
-                    <Text className="text-neutral-300 ml-1">
-                      {movieName.length > 20
-                        ? movieName.slice(0, 20) + "..."
-                        : movieName}
+                    <Text className="text-gray-300 ml-1">
+                      {item.title.length > 22
+                        ? item.title.slice(0, 22) + "..."
+                        : item.title}
                     </Text>
                   </View>
                 </TouchableWithoutFeedback>
@@ -74,18 +102,13 @@ const SearchScreen = () => {
           </View>
         </ScrollView>
       ) : (
-        <View className="justify-center items-center">
+        <View className="flex-row justify-center">
           <Image
             source={require("../../assets/images/movieTime.png")}
             className="h-96 w-96"
           />
-          <Text className="text-neutral-500 font-medium text-base">
-            Sorry, no results for your search...
-          </Text>
         </View>
       )}
     </SafeAreaView>
   );
-};
-
-export default SearchScreen;
+}
